@@ -17,6 +17,14 @@ public class AutentificacionUsuario : MonoBehaviour
     public TMP_InputField inputNameSU;
     public TMP_InputField inputPasswordSU;
 
+    public TextMeshProUGUI passwordSignUpError;
+    public TextMeshProUGUI passwordLogInError;
+    public TextMeshProUGUI profileName;
+    public TextMeshProUGUI profileNameMatch;
+
+    public GameObject logInPanel;
+    public GameObject signUpPanel;
+    public GameObject mainPanel;
 
     public static string playerName;
     public User user;
@@ -67,6 +75,11 @@ public class AutentificacionUsuario : MonoBehaviour
     {
         LogIn(inputEmailLI.text, inputPasswordLI.text);
     }
+    public void DeleteErrorMessage()
+    {
+        passwordSignUpError.text = "";
+        passwordLogInError.text = "";
+    }
     private void SignUp(string email, string username, string password)
     {
         string userData = "{\"email\":\"" + email + "\",\"password\":\"" + password + "\",\"returnSecureToken\":true}";
@@ -77,10 +90,13 @@ public class AutentificacionUsuario : MonoBehaviour
                 localId = response.localId;
                 playerName = username;
                 PostToDatabase();
+                logInPanel.SetActive(true);
+                signUpPanel.SetActive(false);
 
             }).Catch(error =>
             {
                 Debug.Log(error);
+                passwordSignUpError.text = "El correo o contraseña es incorrecto " + error; 
             });
         
     }
@@ -92,10 +108,13 @@ public class AutentificacionUsuario : MonoBehaviour
             idToken = response.idToken;
             localId = response.localId;
             GetUsername();
+            mainPanel.SetActive(true);
+            logInPanel.SetActive(false);           
 
         }).Catch(error =>
         {
             Debug.Log(error);
+            passwordLogInError.text = "El correo o contraseña es incorrecto " + error;
         });
     }
     private void GetUsername()
@@ -104,13 +123,19 @@ public class AutentificacionUsuario : MonoBehaviour
         {
             playerName = response.userName;
             Debug.Log(playerName + " iniciaste sesion");
+            NameMessage();
 
         }).Catch(error =>
         {
             Debug.Log(error);
         });
     }
-    
+    public void NameMessage()
+    {
+        profileName.text = playerName;
+        profileNameMatch.text = playerName;
+    }
+
 
 }
 [System.Serializable] 
