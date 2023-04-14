@@ -132,18 +132,46 @@ public class AutentificacionUsuario : MonoBehaviour
     [SerializeField] GameObject FriendsScreenGameObject;
 
     float timer, timerMax = 0.15f;
+
+    [SerializeField] GameObject matchMakingCanvas;
     private void Update()
     {
-        if (FriendsScreenGameObject.activeSelf)
+        if (FriendsScreenGameObject.activeSelf|| matchMakingCanvas.activeSelf)
         {
             timer += Time.deltaTime;
             if (timer > timerMax)
             {
                 CheckAndUpdateFriendRequests();
+                MatchMakingLogic();
                 timer = 0;
             }
         }
         
+    }
+
+    public void IsMatchMaking(bool isPlayerMatchMaking)
+    {
+        User temporalUser = new User();
+        string isMatchMakingString="false";
+
+        if (isPlayerMatchMaking)
+        {
+            isMatchMakingString = "true";
+        }
+        else
+        {
+            isMatchMakingString = "false";
+        }
+
+        RestClient.Get<User>(databaseURL + localId + ".json").Then(response =>
+        {
+            temporalUser = response;
+            temporalUser.IsUserMatchmaking = isMatchMakingString;
+            RestClient.Patch(databaseURL + localId + ".json", temporalUser);
+        }).Catch(error =>
+        {
+            Debug.Log(error);
+        });
     }
 
 
@@ -259,6 +287,41 @@ public class AutentificacionUsuario : MonoBehaviour
             Debug.Log(error);
             passwordLogInError.text = "El correo o contraseña es incorrecto " + error;
         });
+    }
+
+    List<string> matchMakingUserList = new List<string>();
+    [SerializeField] TextMeshProUGUI matchMakingTextHolder;
+    public void MatchMakingLogic()
+    {
+        RestClient.Get("https://snakeio-17b24-default-rtdb.firebaseio.com/users" + ".json").Then(response =>
+        {
+            fsData userData = fsJsonParser.Parse(response.Text);
+            Dictionary<string, User> users = null;
+            serializer.TryDeserialize(userData, ref users);
+
+            foreach (var item in users.Values)
+            {
+                if (item.IsUserMatchmaking=="true" &&!matchMakingUserList.Contains(item.userName))
+                {
+                    matchMakingUserList.Add(item.userName);
+                }
+                else if(item.IsUserMatchmaking == "false" && matchMakingUserList.Contains(item.userName))
+                {
+                    matchMakingUserList.Remove(item.userName);
+                }
+            }
+            matchMakingTextHolder.text = "";
+            foreach (var item in matchMakingUserList)
+            {
+                matchMakingTextHolder.text += item;
+            }
+
+        }).Catch(error =>
+        {
+            Debug.Log(error);
+        });
+
+
     }
 
     //couldve done better with an asyc method or similar, but im experienced with that
