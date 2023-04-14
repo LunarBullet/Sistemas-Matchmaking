@@ -313,7 +313,7 @@ public class AutentificacionUsuario : MonoBehaviour
             matchMakingTextHolder.text = "";
             foreach (var item in matchMakingUserList)
             {
-                matchMakingTextHolder.text += item;
+                matchMakingTextHolder.text += item +"\n";
             }
 
         }).Catch(error =>
