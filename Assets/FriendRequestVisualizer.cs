@@ -93,9 +93,12 @@ public class FriendRequestVisualizer : MonoBehaviour
                 User updatedUser = response;
                 friendNameToAccept = friendNameToAccept.Trim();
                 updatedUser.FriendsRequests = updatedUser.FriendsRequests.Trim();
+
                 updatedUser.FriendsRequests = Regex.Replace(updatedUser.FriendsRequests, @"\p{C}+", "");
                 updatedUser.FriendsRequests = updatedUser.FriendsRequests.Replace(friendNameToAccept + ",", "");
-                updatedUser.FriendsRequests = updatedUser.FriendsRequests.Replace(","+friendNameToAccept, "");
+                updatedUser.FriendsRequests = updatedUser.FriendsRequests.Replace("," + friendNameToAccept, "");
+                updatedUser.FriendsRequests = updatedUser.FriendsRequests.Replace( friendNameToAccept, "");
+
                 updatedUser.Friends += "," + friendNameToAccept;
 
                 RestClient.Patch<User>(databaseURL + autentificacionUsuario.user.localId + ".json", updatedUser);
