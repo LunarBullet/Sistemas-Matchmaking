@@ -58,9 +58,21 @@ public class AutentificacionUsuario : MonoBehaviour
     }
     private void PostOnlineStatus()
     {
-        user.status = "online";
-        user.userName = playerName;
-        RestClient.Patch(databaseURL + localId + ".json", user);
+        //fix here so this patch doesnt replace the original values
+        RestClient.Get<User>(databaseURL + user.localId + ".json").Then(response =>
+        {
+            user.Friends = response.Friends;
+            user.FriendsRequests = response.FriendsRequests;
+            user.status = "online";
+            user.userName = playerName;
+            RestClient.Patch(databaseURL + localId + ".json", user);
+
+        }).Catch(error =>
+        {
+            Debug.Log(error);
+        });
+        //original code continues
+       
     }
     private void LogOut()
     {
@@ -118,24 +130,33 @@ public class AutentificacionUsuario : MonoBehaviour
         //and then, when we hit accept a friend request, we have to send that new info to the server, remove the old info too, and change (update) our local info
     }
 
-    private void Start()
+    [SerializeField] GameObject FriendsScreenGameObject;
+
+    float timer, timerMax = 0.15f;
+    private void Update()
     {
-        StartCoroutine(CheckForServerChanges());
-    }
-    IEnumerator CheckForServerChanges()
-    {
-        while (true)
+        if (FriendsScreenGameObject.activeSelf)
         {
-            yield return new WaitForSeconds(0.15f);
-            CheckAndUpdateFriendRequests();
-            yield return new WaitForSeconds(0.15f);
+            timer += Time.deltaTime;
+            if (timer > timerMax)
+            {
+                CheckAndUpdateFriendRequests();
+                timer = 0;
+            }
         }
+        
     }
+
 
     //We use this to update our local friend requests lists, this is summoned whenever theres a change in the server, we could even periodically check the server or something
     private void CheckAndUpdateFriendRequests()
     {
         RestClient.Get<User>(databaseURL + localId + ".json").Then(response =>
+        {
+            OurLocalFriendsRequests = response.FriendsRequests;
+        });
+
+            RestClient.Get<User>(databaseURL + localId + ".json").Then(response =>
         {
             if (response.FriendsRequests!=OurLocalFriendsRequests)
             {
@@ -207,11 +228,26 @@ public class AutentificacionUsuario : MonoBehaviour
             
     }
     //Post a firebase para el login
+
+    //save original user extra logic
+    public User originalUserBackup;
     private void LogIn(string email, string password)
     {
         string userData = "{\"email\":\"" + email + "\",\"password\":\"" + password + "\",\"returnSecureToken\":true}";
         RestClient.Post<SignUpResponse>("https://www.googleapis.com/identitytoolkit/v3/relyingparty/verifyPassword?key=" + WebAPIKey, userData).Then(response =>
         {
+            RestClient.Get<User>(databaseURL + localId + ".json").Then(response =>
+            {
+                originalUserBackup = response;
+                foreach (var item in response.FriendsRequests)
+                {
+                    print("checking:"+item);
+                }
+            }).Catch(error =>
+            {
+                Debug.Log(error);
+            });
+
             idToken = response.idToken;
             localId = response.localId;
             user.localId = localId;
@@ -229,7 +265,7 @@ public class AutentificacionUsuario : MonoBehaviour
     //couldve done better with an asyc method or similar, but im experienced with that
     public void GetAnIDFromName(string _playerName)
     {
-        _playerName = Regex.Replace(_playerName, @"\p{C}+", "");
+        _playerName = Regex.Replace(_playerName, @"\p{C}+", ""); //so we clear any unwanted characters
         //foreach (char c in _playerName) //for debudding as i had a weird error
         //{
         //    Debug.Log($"Character '{c}' has Unicode value {Convert.ToUInt16(c)}");

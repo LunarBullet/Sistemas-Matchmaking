@@ -16,8 +16,14 @@ public class FriendRequestVisualizer : MonoBehaviour
 
     [SerializeField] AutentificacionUsuario autentificacionUsuario;
     string friendRequestNames;
+
     List<string> friendRequestNamesList;
-    [SerializeField]TextMeshProUGUI textMeshProUGUI;
+    List<string> friendNamesList;
+    string friendsNames ="";
+
+    [SerializeField] TextMeshProUGUI textMeshProUGUIFriendRequests;
+    [SerializeField] TextMeshProUGUI textMeshProUGUIFriends;
+    [SerializeField] TextMeshProUGUI textMeshProUGUIFriendToAddText;
 
     float timer, timerMax = 0.15f;
 
@@ -43,22 +49,85 @@ public class FriendRequestVisualizer : MonoBehaviour
 
             string[] namesArray = friendRequestNames.Split(',');
             friendRequestNamesList = namesArray.ToList();
-            textMeshProUGUI.text = "";
+            textMeshProUGUIFriendRequests.text = "";
             foreach (var item in friendRequestNamesList)
             {
                 if (item=="") continue; //we ignore da first item;
-                textMeshProUGUI.text += item + "te ha enviado una solicitud" + "\n";
+                textMeshProUGUIFriendRequests.text += item + " te ha enviado una solicitud" + "\n";
             }
 
         }).Catch(error =>
         {
             Debug.Log(error);
         });
-
-
-
-
-        
     }
 
+    public void ReadTextAndAcceptFriend()
+    {
+        AcceptFriendRequest(textMeshProUGUIFriendToAddText.text);
+        //RestClient.Patch(databaseURL + autentificacionUsuario.originalUserBackup.localId + ".json", autentificacionUsuario.originalUserBackup);
+    }
+
+    void AcceptFriendRequest(string friendNameToAccept)
+    {
+
+        friendNameToAccept = Regex.Replace(friendNameToAccept, @"\p{C}+", "");
+        RestClient.Get<User>(databaseURL + autentificacionUsuario.user.localId + ".json").Then(response =>
+        {
+            if (response.Friends.Contains(friendNameToAccept)) return;
+
+            friendRequestNames = response.FriendsRequests;
+
+            string[] namesArray = friendRequestNames.Split(',');
+            friendRequestNamesList = namesArray.ToList();
+            textMeshProUGUIFriendRequests.text = "";
+            foreach (var item in friendRequestNamesList)
+            {
+                if (item == "") continue; //we ignore da first item;
+
+                if (item== friendNameToAccept)
+                {
+                    //update local
+                    friendsNames += "," + friendNameToAccept;
+                    friendRequestNames = friendRequestNames.Replace($"{friendNameToAccept},", ""); //removes friendNameToAccept;
+
+                    //parse new data and send to server 
+                    User updatedUser = response;
+                    updatedUser.Friends = friendsNames;
+                    updatedUser.FriendsRequests = friendRequestNames;
+
+                    RestClient.Patch<User>(databaseURL + autentificacionUsuario.user.localId + ".json", updatedUser).Catch(error =>
+                    {
+                        Debug.Log(error);
+                    }); ;
+
+                }
+                textMeshProUGUIFriendRequests.text += item + "te ha enviado una solicitud" + "\n";
+            }
+
+            //add local changes
+            string[] namesFriendsArray = response.Friends.Split(',');
+            friendNamesList = namesFriendsArray.ToList();
+            textMeshProUGUIFriends.text = "";
+
+            foreach (var item in friendNamesList)
+            {
+                if (item == "") continue; //we ignore da first item;
+
+                if (item == friendNameToAccept)
+                {
+                    textMeshProUGUIFriends.text += item + "\n";
+                }
+                
+            }
+
+
+
+        }).Catch(error =>
+        {
+            Debug.Log(error);
+        });
+    }
 }
+
+
