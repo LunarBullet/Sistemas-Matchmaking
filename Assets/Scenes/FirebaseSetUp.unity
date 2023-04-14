@@ -1980,6 +1980,14 @@ MonoBehaviour:
     FriendsRequests: 
     IsUserMatchmaking: false
   OurLocalFriendsRequests: 
+  FriendsScreenGameObject: {fileID: 321161579}
+  originalUserBackup:
+    userName: 
+    localId: 
+    status: offline
+    Friends: 
+    FriendsRequests: 
+    IsUserMatchmaking: false
 --- !u!4 &313885555
 Transform:
   m_ObjectHideFlags: 0
@@ -2008,6 +2016,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   autentificacionUsuario: {fileID: 313885554}
+  friendRequestNames: 
+  friendNamesList: 
   textMeshProUGUIFriendRequests: {fileID: 1052214062}
   textMeshProUGUIFriends: {fileID: 465915306}
   textMeshProUGUIFriendToAddText: {fileID: 33697603}
@@ -2184,7 +2194,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &321161580
 Transform:
   m_ObjectHideFlags: 0
@@ -8994,7 +9004,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &1666874822
 Transform:
   m_ObjectHideFlags: 0
