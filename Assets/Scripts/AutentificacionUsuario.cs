@@ -104,7 +104,6 @@ public class AutentificacionUsuario : MonoBehaviour
             userToModify.FriendsRequests = response.FriendsRequests;
             userToModify.localId = response.localId;
             userToModify.IsUserMatchmaking = response.IsUserMatchmaking;
-            userToModify.status = response.status;
             userToModify.userName = response.userName;
 
 
